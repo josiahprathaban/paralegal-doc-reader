@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/logo.png">
+    <title>paralegal.lk Doc Reader</title>
+    <style>
+        body {
+            font-family: Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-y: scroll;
+        }
+
+        /* App Bar */
+        .app-bar {
+            /* font-family: Poppins, sans-serif; */
+            /* border-bottom: 1px solid #ddd; */
+            position: sticky;
+            top: 0;
+            background-color: #ffffff;
+            color: #4b4b4b;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .app-bar .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .app-bar .logo img {
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .app-bar .title {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .app-bar .title-x {
+            font-size: 1.2rem;
+            margin: 0 10px;
+        }
+
+        /* Content Area */
+        .json-reader-container {
+            margin: 10px auto;
+            max-width: 210mm;
+            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Spinner Styling */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            /* Light gray */
+            border-top: 4px solid #c5c5c5;
+            /* Purple */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        /* Error Message Styling */
+        .json-reader-container .error-message {
+            margin: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1rem;
+            color: #6f6f6f;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        /* Pages */
+        .page {
+            padding: 20px;
+            margin: 10px;
+            background: #fff;
+            /* border: 1px solid #ddd; */
+            text-align: left;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            page-break-after: always;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sticky Footer */
+        .footer {
+            /* font-family: Poppins, sans-serif; */
+            position: sticky;
+            bottom: 0;
+            background-color: #ffffff;
+            color: #4b4b4b;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            align-items: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            /* border-top: 1px solid #ddd; */
+        }
+
+        .footer .page-info {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Button Styling */
+        .footer button {
+            padding: 8px 16px;
+            background-color: #fff;
+            color: #4b4b4b;
+            border: 0px solid #686868;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .footer button:disabled {
+            color: #9d9d9d;
+            cursor: not-allowed;
+        }
+
+        .footer button:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Text Formatting */
+        .bold {
+            font-weight: bold;
+        }
+
+        .italic {
+            font-style: italic;
+        }
+
+        .underline {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sticky App Bar -->
+    <div class="app-bar">
+        <div class="logo">
+            <img src="logo.png" alt="Logo">
+            <div class="title">paralegal.lk </div>
+            <div class="title-x"> | Doc Reader</div>
+        </div>
+    </div>
+
+    <!-- JSON Reader Container -->
+    <div class="json-reader-container" id="json-reader-container">
+        <div id="spinner" class="spinner" style="display: none;"></div>
+        <div id="json-reader" class="json-reader"></div>
+    </div>
+
+    <!-- Sticky Footer with Page Info -->
+    <div class="footer">
+        <button id="prev-btn" disabled>Previous</button>
+        <div class="page-info">Page <span id="current-page">1</span> of <span id="total-pages">0</span></div>
+        <button id="next-btn" disabled>Next</button>
+    </div>
+
+    <script>
+        // Function to load JSON from a file
+        async function loadJson(file) {
+            try {
+                const response = await fetch(file);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const json = await response.json();
+                return json;
+            } catch (error) {
+                console.error("Error loading JSON:", error);
+                return null;
+            }
+        }
+
+        // Function to format JSON content into pages
+        function renderJsonAsPages(json) {
+            const container = document.createElement("div");
+            container.className = "pages";
+
+            for (const key in json) {
+                const page = document.createElement("div");
+                page.className = "page";
+
+                const content = document.createElement("div");
+                content.className = "content";
+                const cleanedText = processText(json[key]);
+                content.innerHTML = formatText(cleanedText);
+
+                page.appendChild(content);
+                container.appendChild(page);
+            }
+
+            return container;
+        }
+
+        // Function to remove section numbers and other unwanted parts
+        function processText(text) {
+            return text.replace(/^\d+\s*\n/, ""); // Removing section number at the start
+        }
+
+        // Function to handle text formatting (bold, italic, underline)
+        function formatText(text) {
+            text = text.replace(/\n/g, "<br>"); // Replace line breaks with <br>
+            text = text.replace(/(\b[A-Z][A-Z]+\b)/g, "<span class='bold'>$1</span>"); // Bold uppercase words
+            text = text.replace(/_(.*?)_/g, "<span class='italic'>$1</span>"); // Italic for _text_
+            text = text.replace(/~(.*?)~/g, "<span class='underline'>$1</span>"); // Underline for ~text~
+            return text;
+        }
+
+        // Function to handle pagination and navigation
+        function setupPagination() {
+            const pages = document.querySelectorAll(".page");
+            const prevBtn = document.getElementById("prev-btn");
+            const nextBtn = document.getElementById("next-btn");
+            const currentPageEl = document.getElementById("current-page");
+            const totalPagesEl = document.getElementById("total-pages");
+
+            let currentPage = 0;
+            const totalPages = pages.length;
+
+            // Update UI for navigation
+            function updateNavigation() {
+                currentPageEl.textContent = currentPage + 1;
+                totalPagesEl.textContent = totalPages;
+
+                prevBtn.disabled = currentPage === 0;
+                nextBtn.disabled = currentPage === totalPages - 1;
+            }
+
+            // Scroll to the current page
+            function scrollToPage() {
+                const offset = 60; // Adjust the offset to avoid app bar overlap
+                const pagePosition = pages[currentPage].offsetTop - offset;
+                window.scrollTo({ top: pagePosition, behavior: "smooth" });
+            }
+
+            // Event listeners for buttons
+            prevBtn.addEventListener("click", () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    updateNavigation();
+                    scrollToPage();
+                }
+            });
+
+            nextBtn.addEventListener("click", () => {
+                if (currentPage < totalPages - 1) {
+                    currentPage++;
+                    updateNavigation();
+                    scrollToPage();
+                }
+            });
+
+            // Listen to scroll event and update current page
+            window.addEventListener("scroll", () => {
+                const scrollTop = window.scrollY;
+                let accumulatedHeight = 0;
+
+                // Determine which page is in view based on the scroll position
+                for (let i = 0; i < pages.length; i++) {
+                    accumulatedHeight += pages[i].offsetHeight;
+                    if (scrollTop < accumulatedHeight) {
+                        currentPage = i;
+                        break;
+                    }
+                }
+
+                updateNavigation();
+            });
+
+            // Initialize the page and UI
+            updateNavigation();
+        }
+
+        // Function to get the JSON file URL from the query parameters
+        function getJsonFileFromQuery() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('file'); // Get the 'json' parameter from the URL
+        }
+
+        // Main function to load and render JSON
+        async function main() {
+            const jsonReader = document.getElementById("json-reader");
+            const spinner = document.getElementById("spinner");
+            const jsonFile = getJsonFileFromQuery(); // Get the JSON file URL from query parameter
+
+            if (jsonFile) {
+                spinner.style.display = "block"; // Show spinner while loading
+
+                try {
+                    const jsonData = await loadJson(jsonFile);
+
+                    if (jsonData) {
+                        spinner.style.display = "none"; // Hide spinner after loading
+                        const renderedPages = renderJsonAsPages(jsonData);
+                        jsonReader.innerHTML = ""; // Clear the loading message
+                        jsonReader.appendChild(renderedPages);
+
+                        setupPagination();
+                    } else {
+                        showError("Failed to load JSON data.");
+                    }
+                } catch (error) {
+                    console.error("Error loading JSON:", error);
+                    showError("An error occurred while loading the JSON file.");
+                } finally {
+                    spinner.style.display = "none"; // Ensure spinner is hidden
+                }
+            } else {
+                showError("No JSON file specified in the query parameters.");
+            }
+        }
+
+        // Function to display an error message
+        function showError(message) {
+            const jsonReader = document.getElementById("json-reader");
+            jsonReader.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        // Run the main function
+        main();
+    </script>
+</body>
+
+</html>
