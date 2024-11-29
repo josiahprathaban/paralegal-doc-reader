@@ -4,34 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="/logo.png">
+    <link rel="icon" href="logo.png">
     <title>paralegal.lk Doc Reader</title>
     <style>
+        /* Dark Theme Variables */
+        :root {
+            --bg-color: #f4f4f4;
+            --text-color: #4b4b4b;
+            --page-bg: #fff;
+            --app-bar-bg: #ffffff;
+            --footer-bg: #ffffff;
+        }
+
+        body.dark-theme {
+            --bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --page-bg: #2c2c2c;
+            --app-bar-bg: #333;
+            --footer-bg: #333;
+        }
+
         body {
             font-family: Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            background: #f4f4f4;
+            background: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            overflow-y: scroll;
         }
 
         /* App Bar */
         .app-bar {
-            /* font-family: Poppins, sans-serif; */
-            /* border-bottom: 1px solid #ddd; */
             position: sticky;
             top: 0;
-            background-color: #ffffff;
-            color: #4b4b4b;
+            background-color: var(--app-bar-bg);
+            color: var(--text-color);
             padding: 10px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            border-bottom: #7f7f7f29 1px solid;
+            border-top: #7f7f7f29 1px solid;
         }
 
         .app-bar .logo {
@@ -54,6 +71,20 @@
             margin: 0 10px;
         }
 
+        .app-bar button {
+            padding: 0px 14px 10px 8px;
+            background: none;
+            color: var(--text-color);
+            border: 0px solid #686868;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .app-bar button:hover {
+            background-color: #79797925;
+        }
+
         /* Content Area */
         .json-reader-container {
             margin: 10px auto;
@@ -66,9 +97,7 @@
         /* Spinner Styling */
         .spinner {
             border: 4px solid #f3f3f3;
-            /* Light gray */
             border-top: 4px solid #c5c5c5;
-            /* Purple */
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -106,23 +135,24 @@
         /* Pages */
         .page {
             padding: 20px;
-            margin: 10px;
-            background: #fff;
-            /* border: 1px solid #ddd; */
+            margin: 15px;
+            background: var(--page-bg);
+            color: var(--text-color);
             text-align: left;
             white-space: pre-wrap;
             line-height: 1.8;
             page-break-after: always;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border: #7f7f7f29 1px solid;
+            border-radius: 5px;
         }
 
         /* Sticky Footer */
         .footer {
-            /* font-family: Poppins, sans-serif; */
             position: sticky;
             bottom: 0;
-            background-color: #ffffff;
-            color: #4b4b4b;
+            background-color: var(--footer-bg);
+            color: var(--text-color);
             padding: 10px 20px;
             display: flex;
             justify-content: center;
@@ -130,7 +160,7 @@
             align-items: center;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            /* border-top: 1px solid #ddd; */
+            border-top: #7f7f7f29 1px solid;
         }
 
         .footer .page-info {
@@ -141,8 +171,8 @@
         /* Button Styling */
         .footer button {
             padding: 8px 16px;
-            background-color: #fff;
-            color: #4b4b4b;
+            background: #79797925;
+            color: var(--text-color);
             border: 0px solid #686868;
             border-radius: 4px;
             cursor: pointer;
@@ -154,7 +184,7 @@
         }
 
         .footer button:hover {
-            background-color: #f1f1f1;
+            background: #79797943;
         }
 
         /* Text Formatting */
@@ -169,6 +199,103 @@
         .underline {
             text-decoration: underline;
         }
+
+        /* Controls for Dark Theme and Font Size */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .font-size-selector {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Modal Styling */
+        .modal {
+            position: fixed;
+            max-width: 200px;
+            width: 100%;
+            top: 50px;
+            right: 10px;
+            background-color: var(--footer-bg);
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            border-radius: 5px;
+            border: #7f7f7f29 1px solid;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            font-weight: 500;
+        }
+
+        .modal-content input {
+            margin: 0;
+        }
+
+        .modal-content input[type="checkbox"]:checked {
+            accent-color: rgb(223, 13, 125);
+        }
+
+        .modal label {
+            margin-top: 15px;
+            display: block;
+            padding: 0;
+        }
+
+        .modal .actions {
+            margin-top: 10px;
+            padding-top: 10px;
+            display: flex;
+            /* justify-content: end; */
+            gap: 10px;
+        }
+
+        .modal select {
+            margin: 5px 0;
+            outline: none;
+            background-color: #79797925;
+            color: var(--text-color);
+            padding: 2px 0;
+            border-radius: 5px;
+        }
+
+        select option {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        select option:hover {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+
+        .modal button {
+            padding: 6px 16px;
+            background: #79797925;
+            color: var(--text-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal button:hover {
+            background: #79797943;
+        }
     </style>
 </head>
 
@@ -179,6 +306,36 @@
             <img src="logo.png" alt="Logo">
             <div class="title">paralegal.lk </div>
             <div class="title-x"> | Doc Reader</div>
+        </div>
+
+        <button id="settings-btn">⢰</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Settings</h3>
+            <label>
+                <input type="checkbox" id="theme-toggle"> Dark Mode
+            </label>
+            <label for="font-size-select">Font Size:</label>
+            <select id="font-size-select">
+                <option value="small">Small</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+            </select>
+            <br>
+            <label for="font-family-select">Font Family:</label>
+            <select id="font-family-select">
+                <option value="sans-serif" selected>Sans Serif (Roboto)</option>
+                <option value="serif">Serif (Times New Roman)</option>
+            </select>
+            <br>
+            <div class="actions">
+                <button id="save-settings">Save</button>
+                <button id="close-modal">Close</button>
+            </div>
+
         </div>
     </div>
 
@@ -196,6 +353,89 @@
     </div>
 
     <script>
+
+        // Select modal elements
+        const settingsBtn = document.getElementById("settings-btn");
+        const modal = document.getElementById("settings-modal");
+        const closeModalBtn = document.getElementById("close-modal");
+        const saveSettingsBtn = document.getElementById("save-settings");
+
+        const themeToggle = document.getElementById("theme-toggle");
+        const fontSizeSelect = document.getElementById("font-size-select");
+        const fontFamilySelect = document.getElementById("font-family-select");
+
+        // Temporary settings object
+        const settings = {
+            theme: localStorage.getItem("theme") || "light",
+            fontSize: localStorage.getItem("fontSize") || "medium",
+            fontFamily: localStorage.getItem("fontFamily") || "sans-serif"
+        };
+
+        // Open and close modal
+        settingsBtn.addEventListener("click", () => {
+            modal.style.display = "block";
+            // Load current settings into modal
+            themeToggle.checked = settings.theme === "dark";
+            fontSizeSelect.value = settings.fontSize;
+            fontFamilySelect.value = settings.fontFamily;
+        });
+
+        closeModalBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener("click", (event) => {
+            if (modal.style.display === "block" && !modal.contains(event.target) && event.target !== settingsBtn) {
+                modal.style.display = "none";
+            }
+        });
+
+        // Save and apply settings when Save Button is clicked
+        saveSettingsBtn.addEventListener("click", () => {
+            // Update settings object
+            settings.theme = themeToggle.checked ? "dark" : "light";
+            settings.fontSize = fontSizeSelect.value;
+            settings.fontFamily = fontFamilySelect.value;
+
+            // Save to local storage
+            localStorage.setItem("theme", settings.theme);
+            localStorage.setItem("fontSize", settings.fontSize);
+            localStorage.setItem("fontFamily", settings.fontFamily);
+
+            // Apply settings
+            applySettings();
+
+            // Close modal
+            modal.style.display = "none";
+        });
+
+        // Apply settings to the page
+        function applySettings() {
+            // Apply theme
+            document.body.classList.toggle("dark-theme", settings.theme === "dark");
+
+            // Apply font size
+            const pages = document.querySelectorAll(".page");
+            pages.forEach(page => {
+                page.style.fontSize =
+                    settings.fontSize === "small"
+                        ? settings.fontFamily === "sans-serif" ? "0.9rem" : "1rem"
+                        : settings.fontSize === "large"
+                            ? settings.fontFamily === "sans-serif" ? "1.2rem" : "1.4rem"
+                            : settings.fontFamily === "sans-serif" ? "1rem" : "1.2rem";
+            });
+
+            // Apply font family
+            pages.forEach(page => {
+                page.style.fontFamily =
+                    settings.fontFamily === "sans-serif" ? "Roboto, sans-serif" : "Times New Roman, serif";
+            });
+        }
+
+        // Load preferences on page load
+        applySettings()
+
         // Function to load JSON from a file
         async function loadJson(file) {
             try {
@@ -268,7 +508,7 @@
 
             // Scroll to the current page
             function scrollToPage() {
-                const offset = 60; // Adjust the offset to avoid app bar overlap
+                const offset = 68; // Adjust the offset to avoid app bar overlap
                 const pagePosition = pages[currentPage].offsetTop - offset;
                 window.scrollTo({ top: pagePosition, behavior: "smooth" });
             }
@@ -335,6 +575,7 @@
                         jsonReader.innerHTML = ""; // Clear the loading message
                         jsonReader.appendChild(renderedPages);
 
+                        applySettings();
                         setupPagination();
                     } else {
                         showError("Failed to load JSON data.");
